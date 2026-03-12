@@ -13,10 +13,10 @@ Copy the skill to your Codex skills directory:
 ```bash
 # Clone and install
 git clone https://github.com/worktale/worktale-codex-plugin.git
-cp -r worktale-codex-plugin/skills/worktale ~/.codex/skills/worktale
+cp -r worktale-codex-plugin/skills/worktale ~/.agents/skills/worktale
 ```
 
-Or manually create `~/.codex/skills/worktale/SKILL.md` with the contents from this repo.
+Or manually create `~/.agents/skills/worktale/SKILL.md` with the contents from this repo.
 
 Requires the [Worktale CLI](https://www.npmjs.com/package/worktale) **v1.1.0+**:
 
@@ -59,7 +59,7 @@ It does *not* duplicate what git already tracks (file paths, line counts, diffs)
 
 ## How it works
 
-1. Codex loads the skill from `~/.codex/skills/worktale/SKILL.md`
+1. Codex loads the skill from `~/.agents/skills/worktale/SKILL.md`
 2. The skill prompt instructs the agent to run `worktale note "..."` after each commit
 3. `worktale note` appends to the `user_notes` field in your local Worktale database
 4. Notes appear in `worktale digest`, the TUI dashboard, and (eventually) your Worktale Cloud portfolio

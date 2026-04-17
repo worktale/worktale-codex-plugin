@@ -1,77 +1,88 @@
 ---
 name: worktale
-description: Narrate your coding session into Worktale — automatically adds context, decisions, and intent to your daily work narrative after each commit
+description: Narrate your Codex coding session into Worktale — adds per-commit context and end-of-session provider/model/tool metrics
+argument-hint: "[optional initial note]"
 ---
 
-# Worktale Session Narration
+# Worktale Session Narration (Codex)
 
-You are now narrating this coding session for Worktale, a developer work journal. Your job is to add **color and context** to the developer's daily narrative — the "why" behind every commit, not just the "what".
+You are narrating this Codex coding session for Worktale, a developer work journal.
+
+Two responsibilities:
+1. **Per commit** — append a 1–2 sentence narrative note.
+2. **At session end** — record aggregate session metadata (provider, model, tool, tools-used, duration, commits).
+
+Codex hooks do not expose token counts or cost — you are responsible for recording whatever session metadata you can.
 
 ## Prerequisites
-
-Worktale CLI (v1.1.0+) must be installed. When this skill activates, check if `worktale` is available:
 
 ```bash
 worktale --version
 ```
 
-If not installed, tell the user:
+If not installed:
 
 ```
-Worktale CLI is not installed. Install it with: npm install -g worktale@latest
+Worktale CLI is not installed. Install it with: npm install -g worktale
 Then run: worktale init
 ```
 
-Do NOT proceed with narration until the CLI is available.
+## Per-commit narrative
 
-## How it works
-
-After every `git commit` you make during this session, immediately run:
+After every `git commit`, immediately:
 
 ```bash
 worktale note "<1-2 sentence narrative about what you just did and why>"
 ```
 
-This appends your note to today's daily narrative in Worktale. The developer will see these notes in their EOD digest (`worktale digest`), giving them a rich, AI-narrated record of their day.
+Focus on **why**, not **what**:
+- "Added rate limiting to /api/upload — previous impl caused OOM crashes"
+- "Fixed race condition in job queue — workers claimed same job"
 
-## What to write
+Don't duplicate git (no file paths, line counts).
 
-Write from the perspective of a coding partner narrating the session. Include:
+## End-of-session metadata
 
-- **What** was changed (high-level, not file-by-file)
-- **Why** it was changed (the intent, the problem being solved)
-- **Key decisions** made (trade-offs, alternatives considered)
-- **Problems solved** (bugs found, root causes identified)
+When the user indicates the session is wrapping up (e.g., "we're done", "that's it", or when control is returning), run:
 
-## Examples
+```bash
+worktale session add \
+  --provider "openai" \
+  --model "<your model, e.g. o3, gpt-4o, codex-mini>" \
+  --tool "codex" \
+  --tools-used "<comma-separated Codex tools you actually used: shell,file_read,file_write,file_edit,grep,glob>" \
+  --commits "<comma-separated git SHAs from this session, if known>" \
+  --note "<one-line summary of the whole session>"
+```
 
-Good notes:
-- `worktale note "Added rate limiting to the /api/upload endpoint — the previous implementation allowed unlimited requests which was causing OOM crashes in production"`
-- `worktale note "Refactored the auth middleware to store session tokens in encrypted cookies instead of localStorage, driven by new compliance requirements"`
-- `worktale note "Fixed race condition in the job queue — workers were pulling the same job because the claim query wasn't using SELECT FOR UPDATE"`
+### Field rules
 
-Bad notes (too mechanical — the git diff already captures this):
-- `worktale note "Changed file auth.ts"`
-- `worktale note "Updated 3 files"`
-- `worktale note "Committed changes"`
+- **--provider**: always `"openai"`
+- **--model**: your actual model identifier
+- **--tool**: always `"codex"`
+- **--tools-used**: ONLY tools you actually invoked this session
+- **--commits**: run `git log --since="<session start time>" --pretty=%h` to list SHAs (optional)
+- **--note**: one sentence summarizing the whole session's goal/outcome
 
 ## Rules
 
-1. Run `worktale note` **immediately after each commit** — don't batch them up
-2. Keep notes **concise** (1-2 sentences max)
-3. Focus on **intent and context**, not file paths or line counts
-4. If the commit is trivial (typo fix, formatting), keep the note brief: `worktale note "Quick typo fix in the README"`
-5. Never skip a commit — even small ones deserve a one-liner
-6. If `worktale` is not installed or the command fails, mention it to the user once and continue working normally
+1. `worktale note` after every commit — don't batch
+2. `worktale session add` exactly once, at the end
+3. Be accurate about tools — don't list tools you didn't invoke
+4. If `worktale` fails, mention once and continue normally
 
 ## Session start
 
-When this skill activates:
-
-1. Verify `worktale --version` succeeds
-2. Run `worktale capture --silent` to ensure the repo is being tracked
-3. Confirm to the user:
+1. Verify `worktale --version`
+2. Run `worktale capture --silent`
+3. Confirm:
 
 ```
-Worktale narration active. I'll add context to your daily narrative after each commit.
+Worktale narration active. I'll record per-commit context and session metrics.
+```
+
+If an initial note argument is provided:
+
+```bash
+worktale note "<the argument>"
 ```

@@ -1,24 +1,24 @@
-# Worktale Skill for Codex CLI
+# Worktale Plugin for OpenAI Codex
 
-**AI session narration for your daily work journal.**
+**AI session tracking for your daily work journal.**
 
-Git captures the *what*. This plugin captures the *why*.
+When active, Codex:
 
-When you activate the Worktale skill in [Codex CLI](https://github.com/openai/codex), your AI coding agent automatically narrates each commit — adding intent, decisions, and context to your [Worktale](https://worktale.org) daily narrative.
+1. After every commit, appends a 1–2 sentence narrative note to your daily [Worktale](https://worktale.org) journal.
+2. At session wrap-up, records session metadata — **provider, model, tool, tools used, duration, commits** — to your local Worktale DB.
+
+Codex does not expose token counts to plugins, so cost and token totals are not captured. Everything else is.
 
 ## Install
 
-Copy the skill to your Codex skills directory:
+Copy the plugin into your Codex skills directory:
 
 ```bash
-# Clone and install
-git clone https://github.com/worktale/worktale-codex-plugin.git
-cp -r worktale-codex-plugin/skills/worktale ~/.agents/skills/worktale
+mkdir -p ~/.codex/skills/worktale
+cp -r worktale-codex-plugin/skills/worktale/* ~/.codex/skills/worktale/
 ```
 
-Or manually create `~/.agents/skills/worktale/SKILL.md` with the contents from this repo.
-
-Requires the [Worktale CLI](https://www.npmjs.com/package/worktale) **v1.1.0+**:
+Requires the [Worktale CLI](https://www.npmjs.com/package/worktale) **v1.4.0+**:
 
 ```bash
 npm install -g worktale@latest
@@ -28,50 +28,30 @@ worktale init
 
 ## Usage
 
-Start Codex with skills enabled:
+In your Codex session, activate the skill (or invoke it by name). Codex will:
 
 ```bash
-codex --enable skills
+# After each commit
+worktale note "Fixed race condition in job queue — claim query wasn't using SELECT FOR UPDATE"
+
+# At session end
+worktale session add \
+  --provider openai \
+  --tool codex \
+  --model o3 \
+  --tools-used shell,file_read,file_write,grep \
+  --commits abc1234,def5678 \
+  --note "Paid down auth debt and shipped the new rate limiter"
 ```
 
-The agent will automatically detect and activate the Worktale skill when relevant. After every commit it makes, it runs:
+## View your data
 
 ```bash
-worktale note "Refactored auth middleware for compliance — replaced session token storage"
+worktale today
+worktale session list
+worktale session stats
+worktale dash
 ```
-
-Notes accumulate throughout the day. View them with:
-
-```bash
-worktale digest    # End-of-day summary with your notes
-worktale dash      # Interactive TUI dashboard
-```
-
-## What gets captured
-
-The agent writes 1-2 sentence notes focused on:
-
-- **Intent** — why the change was made
-- **Decisions** — trade-offs and alternatives considered
-- **Problems solved** — bugs found, root causes identified
-
-It does *not* duplicate what git already tracks (file paths, line counts, diffs).
-
-## How it works
-
-1. Codex loads the skill from `~/.agents/skills/worktale/SKILL.md`
-2. The skill prompt instructs the agent to run `worktale note "..."` after each commit
-3. `worktale note` appends to the `user_notes` field in your local Worktale database
-4. Notes appear in `worktale digest`, the TUI dashboard, and (eventually) your Worktale Cloud portfolio
-
-All data stays local. Nothing leaves your machine.
-
-## Links
-
-- [Worktale CLI](https://github.com/worktale/worktale-cli)
-- [Worktale website](https://worktale.org)
-- [Documentation](https://worktale.org/docs.html)
-- [Claude Code Plugin](https://github.com/worktale/worktale-plugin)
 
 ## License
 
